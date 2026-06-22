@@ -1,4 +1,3 @@
-# Python_lab
 Trabajo Final Integrador de Programación en Python.
 
 # Sistema de Gestión de Estacionamiento.
@@ -25,3 +24,19 @@ El sistema permite:
 * Calcular el importe a pagar según las horas de permanencia.
 * Mostrar vehículos estacionados.
 * Generar estadísticas de uso.
+
+## Instrucciones de ejecución
+
+1. Abrir el archivo `main.py`.
+2. Ejecutar el programa con Python.
+3. Seleccionar una opción del menú principal.
+4. Seguir las instrucciones mostradas por pantalla.
+
+## Uso de Inteligencia Artificial
+
+Durante el desarrollo del proyecto se utilizó ChatGPT como herramienta de apoyo para:
+
+* Resolver dudas de programación.
+* Proponer estructuras de código.
+* Explicar conceptos de Python.
+* Ayudar en la detección y corrección de errores.
