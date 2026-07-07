@@ -1,5 +1,7 @@
 from funciones import *
 
+cargar_datos()
+
 opcion = 0
 
 while opcion != 6:
