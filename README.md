@@ -187,9 +187,3 @@ Durante el desarrollo del proyecto se utilizó ChatGPT como herramienta de apoyo
 - Asistir en la elaboración de la documentación del proyecto (README).
 
 La implementación, las decisiones de desarrollo y la versión final del proyecto fueron realizadas por los integrantes del grupo.
-
----
-
-# Licencia
-
-Proyecto desarrollado con fines exclusivamente académicos para la materia **Programación en Python**.
