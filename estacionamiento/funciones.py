@@ -1,59 +1,74 @@
 import datetime
+import os
 
 CAPACIDAD = 50
 
 vehiculos = {}
-
-vehiculos_atendidos = 0
-recaudacion_total = 0
-total_horas = 0
+estadisticas = {}
 
 
 def guardar_datos():
 
-    archivo = open("datos.txt", "w")
+    with open("vehiculos.txt", "w", encoding="utf-8") as archivo:
 
-    archivo.write(str(vehiculos_atendidos) + "\n")
-    archivo.write(str(recaudacion_total) + "\n")
-    archivo.write(str(total_horas) + "\n")
+        for patente in vehiculos:
 
-    for patente in vehiculos:
-        archivo.write(patente + ";" + str(vehiculos[patente]) + "\n")
+            ingreso = vehiculos[patente].strftime("%Y-%m-%d %H:%M:%S")
 
-    archivo.close()
+            archivo.write(patente + ";" + ingreso + "\n")
+
+    with open("estadisticas.txt", "w", encoding="utf-8") as archivo:
+
+        for fecha in estadisticas:
+
+            datos = estadisticas[fecha]
+
+            archivo.write(
+                fecha + ";" +
+                str(datos["vehiculos"]) + ";" +
+                str(datos["recaudacion"]) + ";" +
+                str(datos["horas"]) + "\n"
+            )
 
 
 def cargar_datos():
 
     global vehiculos
-    global vehiculos_atendidos
-    global recaudacion_total
-    global total_horas
+    global estadisticas
 
-    try:
+    vehiculos = {}
+    estadisticas = {}
 
-        archivo = open("datos.txt", "r")
+    if os.path.exists("vehiculos.txt"):
 
-        vehiculos_atendidos = int(archivo.readline())
-        recaudacion_total = int(archivo.readline())
-        total_horas = int(archivo.readline())
+        with open("vehiculos.txt", "r", encoding="utf-8") as archivo:
 
-        vehiculos = {}
+            for linea in archivo:
 
-        for linea in archivo:
-            datos = linea.strip().split(";")
-            patente = datos[0]
-            hora = int(datos[1])
-            vehiculos[patente] = hora
+                datos = linea.strip().split(";")
 
-        archivo.close()
+                patente = datos[0]
 
-    except FileNotFoundError:
+                ingreso = datetime.datetime.strptime(
+                    datos[1],
+                    "%Y-%m-%d %H:%M:%S"
+                )
 
-        vehiculos = {}
-        vehiculos_atendidos = 0
-        recaudacion_total = 0
-        total_horas = 0
+                vehiculos[patente] = ingreso
+
+    if os.path.exists("estadisticas.txt"):
+
+        with open("estadisticas.txt", "r", encoding="utf-8") as archivo:
+
+            for linea in archivo:
+
+                datos = linea.strip().split(";")
+
+                estadisticas[datos[0]] = {
+                    "vehiculos": int(datos[1]),
+                    "recaudacion": float(datos[2]),
+                    "horas": float(datos[3])
+                }
 
 
 def registrar_en_log(mensaje):
@@ -61,6 +76,7 @@ def registrar_en_log(mensaje):
     ahora = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
     with open("registro_estacionamiento.txt", "a", encoding="utf-8") as archivo:
+
         archivo.write(f"[{ahora}] {mensaje}\n")
 
 
@@ -73,29 +89,24 @@ def ingresar_vehiculo():
     patente = input("Ingrese la patente: ").upper()
 
     if patente in vehiculos:
-        print("Error: el vehículo ya se encuentra estacionado.")
+        print("Error: el vehículo ya está estacionado.")
         return
 
-    hora_ingreso = int(input("Ingrese la hora de ingreso (0-23): "))
+    ingreso = datetime.datetime.now()
 
-    if hora_ingreso < 0 or hora_ingreso > 23:
-        print("Error: hora inválida.")
-        return
-
-    vehiculos[patente] = hora_ingreso
+    vehiculos[patente] = ingreso
 
     print("Vehículo registrado correctamente.")
+    print("Fecha y hora de ingreso:", ingreso.strftime("%d/%m/%Y %H:%M:%S"))
 
-    registrar_en_log(f"INGRESO - Patente: {patente} | Hora indicada: {hora_ingreso}:00 hs")
+    registrar_en_log(
+        f"INGRESO - Patente: {patente} | {ingreso.strftime('%d/%m/%Y %H:%M:%S')}"
+    )
 
     guardar_datos()
 
 
 def registrar_egreso():
-
-    global vehiculos_atendidos
-    global recaudacion_total
-    global total_horas
 
     patente = input("Ingrese la patente: ").upper()
 
@@ -103,34 +114,39 @@ def registrar_egreso():
         print("Error: vehículo no encontrado.")
         return
 
-    hora_salida = int(input("Ingrese la hora de salida (0-23): "))
+    ingreso = vehiculos[patente]
 
-    if hora_salida < 0 or hora_salida > 23:
-        print("Error: hora inválida.")
-        return
+    salida = datetime.datetime.now()
 
-    hora_ingreso = vehiculos[patente]
+    horas = (salida - ingreso).total_seconds() / 3600
 
-    if hora_salida < hora_ingreso:
-        print("Error: la hora de salida no puede ser menor que la de ingreso.")
-        return
+    if horas < 1:
+        horas = 1
 
-    horas = hora_salida - hora_ingreso
+    importe = round(horas * 1000, 2)
 
-    importe = horas * 1000
+    fecha = salida.strftime("%d/%m/%Y")
 
-    print("Horas de permanencia:", horas)
-    print("Importe a pagar: $", importe)
+    if fecha not in estadisticas:
 
-    vehiculos_atendidos += 1
-    recaudacion_total += importe
-    total_horas += horas
+        estadisticas[fecha] = {
+            "vehiculos": 0,
+            "recaudacion": 0,
+            "horas": 0
+        }
+
+    estadisticas[fecha]["vehiculos"] += 1
+    estadisticas[fecha]["recaudacion"] += importe
+    estadisticas[fecha]["horas"] += horas
 
     del vehiculos[patente]
 
-    print("Egreso registrado correctamente.")
+    print("Tiempo de permanencia:", round(horas, 2), "horas")
+    print("Importe a pagar: $", importe)
 
-    registrar_en_log(f"EGRESO - Patente: {patente} | Permanencia: {horas} hs | Cobrado: ${importe}")
+    registrar_en_log(
+        f"EGRESO - Patente: {patente} | {round(horas,2)} hs | ${importe}"
+    )
 
     guardar_datos()
 
@@ -141,36 +157,41 @@ def mostrar_estacionados():
         print("No hay vehículos estacionados.")
         return
 
-    print("\nVehículos estacionados:")
+    print("\nVehículos estacionados:\n")
 
     for patente in vehiculos:
-        print(patente)
+
+        print(
+            patente,
+            "- Ingresó:",
+            vehiculos[patente].strftime("%d/%m/%Y %H:%M:%S")
+        )
 
 
 def mostrar_disponibles():
 
-    ocupados = len(vehiculos)
-
-    disponibles = CAPACIDAD - ocupados
-
     print("\nCapacidad total:", CAPACIDAD)
-    print("Lugares ocupados:", ocupados)
-    print("Lugares disponibles:", disponibles)
+    print("Lugares ocupados:", len(vehiculos))
+    print("Lugares disponibles:", CAPACIDAD - len(vehiculos))
 
 
 def mostrar_estadisticas():
 
-    print("\n===== ESTADÍSTICAS =====")
+    if len(estadisticas) == 0:
 
-    print("Vehículos atendidos:", vehiculos_atendidos)
-    print("Recaudación total: $", recaudacion_total)
+        print("Todavía no hay estadísticas.")
+        return
 
-    if vehiculos_atendidos > 0:
+    print("\n===== ESTADÍSTICAS POR DÍA =====\n")
 
-        promedio = total_horas / vehiculos_atendidos
+    for fecha in sorted(estadisticas):
 
-        print("Tiempo promedio de permanencia:", promedio, "horas")
+        datos = estadisticas[fecha]
 
-    else:
+        promedio = datos["horas"] / datos["vehiculos"]
 
-        print("Todavía no se registraron egresos.")
+        print("Fecha:", fecha)
+        print("Vehículos atendidos:", datos["vehiculos"])
+        print("Recaudación: $", round(datos["recaudacion"], 2))
+        print("Promedio de permanencia:", round(promedio, 2), "horas")
+        print("--------------------------------")
