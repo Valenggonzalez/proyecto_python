@@ -8,10 +8,61 @@ vehiculos_atendidos = 0
 recaudacion_total = 0
 total_horas = 0
 
+
+def guardar_datos():
+
+    archivo = open("datos.txt", "w")
+
+    archivo.write(str(vehiculos_atendidos) + "\n")
+    archivo.write(str(recaudacion_total) + "\n")
+    archivo.write(str(total_horas) + "\n")
+
+    for patente in vehiculos:
+        archivo.write(patente + ";" + str(vehiculos[patente]) + "\n")
+
+    archivo.close()
+
+
+def cargar_datos():
+
+    global vehiculos
+    global vehiculos_atendidos
+    global recaudacion_total
+    global total_horas
+
+    try:
+
+        archivo = open("datos.txt", "r")
+
+        vehiculos_atendidos = int(archivo.readline())
+        recaudacion_total = int(archivo.readline())
+        total_horas = int(archivo.readline())
+
+        vehiculos = {}
+
+        for linea in archivo:
+            datos = linea.strip().split(";")
+            patente = datos[0]
+            hora = int(datos[1])
+            vehiculos[patente] = hora
+
+        archivo.close()
+
+    except FileNotFoundError:
+
+        vehiculos = {}
+        vehiculos_atendidos = 0
+        recaudacion_total = 0
+        total_horas = 0
+
+
 def registrar_en_log(mensaje):
+
     ahora = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+
     with open("registro_estacionamiento.txt", "a", encoding="utf-8") as archivo:
         archivo.write(f"[{ahora}] {mensaje}\n")
+
 
 def ingresar_vehiculo():
 
@@ -19,7 +70,7 @@ def ingresar_vehiculo():
         print("Error: no hay lugares disponibles.")
         return
 
-    patente = input("Ingrese la patente: ")
+    patente = input("Ingrese la patente: ").upper()
 
     if patente in vehiculos:
         print("Error: el vehículo ya se encuentra estacionado.")
@@ -37,13 +88,16 @@ def ingresar_vehiculo():
 
     registrar_en_log(f"INGRESO - Patente: {patente} | Hora indicada: {hora_ingreso}:00 hs")
 
+    guardar_datos()
+
+
 def registrar_egreso():
 
     global vehiculos_atendidos
     global recaudacion_total
     global total_horas
 
-    patente = input("Ingrese la patente: ")
+    patente = input("Ingrese la patente: ").upper()
 
     if patente not in vehiculos:
         print("Error: vehículo no encontrado.")
@@ -78,6 +132,9 @@ def registrar_egreso():
 
     registrar_en_log(f"EGRESO - Patente: {patente} | Permanencia: {horas} hs | Cobrado: ${importe}")
 
+    guardar_datos()
+
+
 def mostrar_estacionados():
 
     if len(vehiculos) == 0:
@@ -88,6 +145,7 @@ def mostrar_estacionados():
 
     for patente in vehiculos:
         print(patente)
+
 
 def mostrar_disponibles():
 
@@ -114,4 +172,5 @@ def mostrar_estadisticas():
         print("Tiempo promedio de permanencia:", promedio, "horas")
 
     else:
+
         print("Todavía no se registraron egresos.")
