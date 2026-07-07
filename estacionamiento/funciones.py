@@ -1,3 +1,5 @@
+import datetime
+
 CAPACIDAD = 50
 
 vehiculos = {}
@@ -5,6 +7,11 @@ vehiculos = {}
 vehiculos_atendidos = 0
 recaudacion_total = 0
 total_horas = 0
+
+def registrar_en_log(mensaje):
+    ahora = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    with open("registro_estacionamiento.txt", "a", encoding="utf-8") as archivo:
+        archivo.write(f"[{ahora}] {mensaje}\n")
 
 def ingresar_vehiculo():
 
@@ -28,6 +35,7 @@ def ingresar_vehiculo():
 
     print("Vehículo registrado correctamente.")
 
+    registrar_en_log(f"INGRESO - Patente: {patente} | Hora indicada: {hora_ingreso}:00 hs")
 
 def registrar_egreso():
 
@@ -67,6 +75,8 @@ def registrar_egreso():
     del vehiculos[patente]
 
     print("Egreso registrado correctamente.")
+
+    registrar_en_log(f"EGRESO - Patente: {patente} | Permanencia: {horas} hs | Cobrado: ${importe}")
 
 def mostrar_estacionados():
 
