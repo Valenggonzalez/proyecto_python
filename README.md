@@ -204,7 +204,9 @@ El sistema verifica que:
 * GitHub
 
 ---
-
+Enlace al video de youtube 
+https://youtu.be/IMEa5ygQWk0
+---
 # Uso de Inteligencia Artificial
 
 Durante el desarrollo del proyecto se utilizó ChatGPT como herramienta de apoyo para:
